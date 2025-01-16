@@ -1,6 +1,9 @@
 # birthday/views.py
 from django.shortcuts import get_object_or_404, redirect, render
 
+from django.views.generic import CreateView, ListView
+from django.urls import reverse_lazy
+
 from django.core.paginator import Paginator
 
 from .forms import BirthdayForm
@@ -32,17 +35,28 @@ def birthday(request, pk=None):
     return render(request, 'birthday/birthday.html', context)
 
 
-def birthday_list(request):
-    # Получаем все объекты модели Birthday из БД.
-    birthdays = Birthday.objects.order_by('id')
-    paginator = Paginator(birthdays, 10)
+class BirthdayCreateView(CreateView):
+    # Указываем модель, с которой работает CBV...
+    model = Birthday
+    # Этот класс сам может создать форму на основе модели!
+    # Нет необходимости отдельно создавать форму через ModelForm.
+    # Указываем поля, которые должны быть в форме:
+    fields = '__all__'
+    # Явным образом указываем шаблон:
+    template_name = 'birthday/birthday.html'
+    # Указываем namespace:name страницы, куда будет перенаправлен пользователь
+    # после создания объекта:
+    success_url = reverse_lazy('birthday:list') 
 
-    page_number = request.GET.get('page')
 
-    page_obj = paginator.get_page(page_number)
-    # Передаём их в контекст шаблона.
-    context = {'page_obj': page_obj}
-    return render(request, 'birthday/birthday_list.html', context) 
+# Наследуем класс от встроенного ListView:
+class BirthdayListView(ListView):
+    # Указываем модель, с которой работает CBV...
+    model = Birthday
+    # ...сортировку, которая будет применена при выводе списка объектов:
+    ordering = 'id'
+    # ...и даже настройки пагинации:
+    paginate_by = 10 
 
 
 def delete_birthday(request, pk):
