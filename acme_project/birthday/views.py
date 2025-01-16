@@ -1,7 +1,7 @@
 # birthday/views.py
 from django.shortcuts import get_object_or_404, redirect, render
 
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, UpdateView
 from django.urls import reverse_lazy
 
 from django.core.paginator import Paginator
@@ -12,27 +12,34 @@ from .utils import calculate_birthday_countdown
 
 
 # Добавим опциональный параметр pk.
-def birthday(request, pk=None):
-    if pk is not None:
-        instance = get_object_or_404(Birthday, pk=pk)
-    else:
-        instance = None
-    form = BirthdayForm(
-        request.POST or None,
-        # Файлы, переданные в запросе, указываются отдельно.
-        files=request.FILES or None,
-        instance=instance
-    )
-    # Остальной код без изменений.
-    context = {'form': form}
-    # Сохраняем данные, полученные из формы, и отправляем ответ:
-    if form.is_valid():
-        form.save()
-        birthday_countdown = calculate_birthday_countdown(
-            form.cleaned_data['birthday']
-        )
-        context.update({'birthday_countdown': birthday_countdown})
-    return render(request, 'birthday/birthday.html', context)
+# def birthday(request, pk=None):
+#     if pk is not None:
+#         instance = get_object_or_404(Birthday, pk=pk)
+#     else:
+#         instance = None
+#     form = BirthdayForm(
+#         request.POST or None,
+#         # Файлы, переданные в запросе, указываются отдельно.
+#         files=request.FILES or None,
+#         instance=instance
+#     )
+#     # Остальной код без изменений.
+#     context = {'form': form}
+#     # Сохраняем данные, полученные из формы, и отправляем ответ:
+#     if form.is_valid():
+#         form.save()
+#         birthday_countdown = calculate_birthday_countdown(
+#             form.cleaned_data['birthday']
+#         )
+#         context.update({'birthday_countdown': birthday_countdown})
+#     return render(request, 'birthday/birthday.html', context)
+
+
+class BirthdayUpdateView(UpdateView):
+    model = Birthday
+    form_class = BirthdayForm
+    template_name = 'birthday/birthday.html'
+    success_url = reverse_lazy('birthday:list') 
 
 
 class BirthdayCreateView(CreateView):
@@ -41,7 +48,7 @@ class BirthdayCreateView(CreateView):
     # Этот класс сам может создать форму на основе модели!
     # Нет необходимости отдельно создавать форму через ModelForm.
     # Указываем поля, которые должны быть в форме:
-    fields = '__all__'
+    form_class = BirthdayForm
     # Явным образом указываем шаблон:
     template_name = 'birthday/birthday.html'
     # Указываем namespace:name страницы, куда будет перенаправлен пользователь
